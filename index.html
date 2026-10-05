@@ -1,0 +1,1602 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Venta de jabon micar</title>
+
+  <!-- METADATOS WEBAPP PWA UNIVERSALES (iOS, ANDROID, PC, MAC) -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Venta de jabon micar">
+  <meta name="application-name" content="Venta de jabon micar">
+  <meta name="theme-color" content="#121212">
+
+  <!-- FAVICON E ÍCONOS INTEGRADOS (logo Micar, archivos propios subidos junto con index.html) -->
+  <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+  <link rel="apple-touch-icon-precomposed" href="apple-touch-icon.png">
+
+  <!-- MANIFIESTO PWA (archivo separado, necesario para que funcione el modo sin conexión) -->
+  <link rel="manifest" href="manifest.json">
+
+  <!-- Generador Directo de PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+  <style>
+    :root {
+      --bg-dark: #121212;
+      --card-bg: #1e1e1e;
+      --card-inner: #2a2a2a;
+      --primary: #0d9488;
+      --primary-hover: #115e59;
+      --accent-green: #22c55e;
+      --accent-red: #ef4444;
+      --accent-amber: #f59e0b;
+      --text-main: #ffffff;
+      --text-muted: #a1a1aa;
+      --border-color: #333333;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    html, body { overflow-x: hidden; max-width: 100%; background-color: var(--bg-dark); color: var(--text-main); }
+    body { padding: 12px; display: flex; justify-content: center; }
+
+    .app-container { width: 100%; max-width: 520px; display: flex; flex-direction: column; gap: 12px; }
+
+    /* CABECERA CON TARJETA DE MÉTRICAS HOY (INTACTA) */
+    .top-card {
+      background-color: var(--primary);
+      border-radius: 20px;
+      padding: 16px;
+      color: white;
+      box-shadow: 0 6px 20px rgba(13, 148, 136, 0.35);
+    }
+    .top-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .top-header h2 { font-size: 18px; font-weight: 800; }
+    .top-header span { font-size: 12px; opacity: 0.95; font-weight: 500; text-transform: capitalize; }
+    .top-stats { display: flex; gap: 10px; }
+    .stat-box {
+      background: rgba(255, 255, 255, 0.18);
+      backdrop-filter: blur(5px);
+      flex: 1;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .stat-box p { font-size: 11px; opacity: 0.9; margin-bottom: 2px; font-weight: 500; }
+    .stat-box h3 { font-size: 18px; font-weight: 800; }
+
+    /* PESTAÑAS TIPO BURBUJA */
+    .nav-tabs {
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 5px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+    .tab-btn {
+      flex: 1 1 30%;
+      min-width: 80px;
+      padding: 8px 4px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-weight: 700;
+      font-size: 11px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+      text-align: center;
+    }
+    .tab-btn.active {
+      background: var(--card-inner);
+      color: white;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    }
+    .tab-content { display: none; flex-direction: column; gap: 12px; }
+    .tab-content.active { display: flex; }
+
+    /* TARJETAS */
+    .card {
+      background: var(--card-bg);
+      border-radius: 18px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      border: 1px solid rgba(255,255,255,0.03);
+    }
+    .card-title { font-size: 15px; font-weight: 800; display: flex; align-items: center; justify-content: space-between; }
+
+    /* SECCIÓN INGRESOS */
+    .input-section {
+      background: var(--card-inner);
+      border-radius: 14px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      border: 1px solid var(--border-color);
+    }
+
+    .input-row { display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; }
+    .form-group { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 100px; }
+    .form-group label { font-size: 11px; color: var(--text-muted); font-weight: 600; }
+
+    select, input {
+      background: var(--bg-dark);
+      border: 1px solid var(--border-color);
+      color: white;
+      padding: 8px 10px;
+      border-radius: 10px;
+      font-size: 13px;
+      outline: none;
+      width: 100%;
+    }
+    select:focus, input:focus { border-color: var(--primary); }
+
+    .btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 9px 12px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      transition: transform 0.1s;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn-secondary { background: var(--card-inner); color: white; border: 1px solid var(--border-color); }
+    .btn-icon { background: none; border: none; color: white; cursor: pointer; font-size: 15px; padding: 2px; }
+
+    /* BOTONES DE TOQUE RÁPIDO */
+    .quick-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
+    .quick-btn {
+      background: var(--card-inner);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 8px;
+      text-align: left;
+      cursor: pointer;
+    }
+    .quick-btn:active { background: var(--primary); }
+    .quick-btn p { font-size: 12px; font-weight: 700; color: white; }
+    .quick-btn span { font-size: 10px; color: #2dd4bf; font-weight: 600; }
+    .quick-btn .desc { font-size: 10px; color: var(--text-muted); display: block; }
+
+    /* CARRITO Y NOTA DE VENTA */
+    .cart-list { display: flex; flex-direction: column; gap: 8px; padding-top: 4px; }
+    .cart-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--card-inner);
+      padding: 8px 10px;
+      border-radius: 12px;
+    }
+    .cart-item-info h4 { font-size: 13px; font-weight: 700; }
+    .cart-item-info p { font-size: 11px; color: var(--text-muted); }
+
+    /* TARJETAS DEL HISTORIAL DE HOY */
+    .ticket-card {
+      background: var(--card-inner);
+      border-radius: 14px;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      border: 1px solid var(--border-color);
+    }
+    .ticket-item-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+    .ticket-item-row .p-title { font-size: 14px; font-weight: 700; color: #ffffff; }
+    .ticket-item-row .p-sub { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
+    .ticket-item-row .p-price { font-size: 14px; font-weight: 700; color: #ffffff; }
+
+    .ticket-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      padding-top: 6px;
+      border-top: 1px dashed rgba(255,255,255,0.1);
+      margin-top: 2px;
+    }
+    .ticket-footer .meta-time { font-size: 11px; color: var(--text-muted); }
+    .ticket-footer .meta-details { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .ticket-footer .total-green { font-size: 18px; font-weight: 800; color: #22c55e; }
+
+    /* CAJA CAMBIO */
+    .cambio-box {
+      border-radius: 14px;
+      padding: 12px;
+      text-align: center;
+      transition: all 0.2s ease;
+    }
+    .cambio-box.verde {
+      background: rgba(34, 197, 94, 0.12);
+      border: 1px solid rgba(34, 197, 94, 0.25);
+    }
+    .cambio-box.verde p { font-size: 12px; color: var(--accent-green); font-weight: 700; }
+    .cambio-box.verde h3 { font-size: 22px; color: var(--accent-green); font-weight: 900; }
+
+    .cambio-box.rojo {
+      background: transparent;
+      border: none;
+      padding: 6px 0;
+      text-align: center;
+    }
+    .cambio-box.rojo h3 { font-size: 18px; color: var(--accent-red); font-weight: 800; }
+
+    /* TABLAS */
+    table.dark-table { width: 100%; border-collapse: collapse; font-size: 12px; text-align: left; }
+    table.dark-table th { padding: 8px; border-bottom: 1px solid var(--border-color); color: var(--text-muted); }
+    table.dark-table td { padding: 8px; border-bottom: 1px solid var(--border-color); }
+
+    /* PLANTILLA PDF */
+    .pdf-container-export {
+      background: #ffffff;
+      color: #000000;
+      padding: 20px 24px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .pdf-header-title { font-size: 22px; font-weight: 800; color: #000000; display: flex; align-items: center; gap: 8px; }
+    .pdf-header-date { font-size: 13px; color: #8e8e93; font-weight: 500; margin-top: 3px; text-transform: lowercase; }
+
+    .pdf-table-clean { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 12px; }
+    .pdf-table-clean th { background: #f2f2f7; text-align: left; padding: 8px 10px; font-size: 11px; font-weight: 700; color: #3a3a3c; text-transform: uppercase; }
+    .pdf-table-clean td { padding: 10px; border-bottom: 1px solid #e5e5ea; color: #1c1c1e; font-size: 12px; }
+
+    .pdf-summary-card {
+      background: #f8f8f8;
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-top: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .pdf-summary-title { font-size: 14px; font-weight: 800; color: #000000; display: flex; align-items: center; gap: 6px; }
+    .pdf-summary-row { display: flex; justify-content: space-between; font-size: 13px; color: #3a3a3c; }
+    .pdf-summary-row.total-bold { font-size: 15px; font-weight: 800; color: #000000; border-top: 1px solid #e5e5ea; padding-top: 8px; }
+
+    /* MODAL */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 500;
+      padding: 15px;
+    }
+    .modal-card {
+      background: var(--card-bg);
+      border-radius: 18px;
+      padding: 16px;
+      width: 100%;
+      max-width: 440px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+
+    <!-- 1. RESUMEN SUPERIOR "HOY" (SIN CAMBIOS, PERMANECE CON SUS DATOS REALES) -->
+    <div class="top-card">
+      <div class="top-header">
+        <h2>Hoy</h2>
+        <span id="txt-fecha-hoy"></span>
+      </div>
+      <div class="top-stats">
+        <div class="stat-box">
+          <p id="txt-num-cuentas">Cuentas (0)</p>
+          <h3 id="txt-total-ventas">$0.00</h3>
+        </div>
+        <div class="stat-box">
+          <p>Ganancias</p>
+          <h3 id="txt-total-ganancias">$0.00</h3>
+        </div>
+      </div>
+    </div>
+
+    <!-- PESTAÑAS DE NAVEGACIÓN -->
+    <div class="nav-tabs">
+      <button class="tab-btn active" onclick="switchTab('ventas')">🧾 Caja</button>
+      <button class="tab-btn" onclick="switchTab('inventario')">📦 Inventario</button>
+      <button class="tab-btn" onclick="switchTab('promos')">🎁 Promos</button>
+      <button class="tab-btn" onclick="switchTab('otros')">🛍️ Otros</button>
+      <button class="tab-btn" onclick="switchTab('reportes')">📊 Reportes</button>
+    </div>
+
+    <!-- PESTAÑA 1: CAJA / TERMINAL DE VENTAS -->
+    <div id="tab-ventas" class="tab-content active">
+
+      <div class="card">
+        <!-- SELECTOR MODO DE VENTA -->
+        <div class="input-section">
+          <div class="form-group">
+            <label>Modo de Venta:</label>
+            <select id="tipo-cobro" onchange="cambiarModoCobro()">
+              <option value="litros">🪣 Venta por Litros (L)</option>
+              <option value="dinero">💵 Venta por Dinero ($)</option>
+            </select>
+          </div>
+
+          <!-- MODO VENTA POR LITROS -->
+          <div id="wrap-cobro-litros" class="input-row">
+            <div class="form-group" style="flex: 2;">
+              <label>Producto</label>
+              <select id="prod-litros"></select>
+            </div>
+            <div class="form-group" style="flex: 1;">
+              <label>Litros (L)</label>
+              <input type="number" step="any" id="cant-litros" placeholder="0">
+            </div>
+            <button class="btn" onclick="agregarPorLitrosDirectos()">+ Agregar</button>
+          </div>
+
+          <!-- MODO VENTA POR DINERO -->
+          <div id="wrap-cobro-dinero" class="input-row" style="display: none;">
+            <div class="form-group" style="flex: 2;">
+              <label>Producto</label>
+              <select id="prod-dinero"></select>
+            </div>
+            <div class="form-group" style="flex: 1;">
+              <label>Monto ($)</label>
+              <input type="number" step="1" id="monto-dinero" placeholder="0">
+            </div>
+            <button class="btn" onclick="agregarPorDineroRedondeado()">+ Agregar</button>
+          </div>
+        </div>
+
+        <!-- NOTA DE VENTA Y CARRITO -->
+        <div id="wrapper-nota-arriba" style="display: none; flex-direction: column; gap: 10px; background: rgba(255,255,255,0.02); border: 1px solid var(--primary); padding: 12px; border-radius: 14px;">
+          <div class="card-title">
+            <span>🧾 Nota de Venta Actual</span>
+            <button id="btn-limpiar-nota" class="btn btn-secondary" style="padding: 4px 8px; font-size: 11px;" onclick="vaciarCarrito()">✕ Nueva</button>
+          </div>
+
+          <div id="cart-container" class="cart-list"></div>
+
+          <div id="cart-total-row" style="display: flex; justify-content: space-between; align-items: center; font-size: 16px; font-weight: 800; border-top: 1px solid var(--border-color); padding-top: 8px;">
+            <span>Total acumulado:</span>
+            <span id="cart-total" style="color: #2dd4bf;">$0.00</span>
+          </div>
+
+          <!-- MÓDULO COBRAR -->
+          <div id="card-cobrar" style="display: flex; flex-direction: column; gap: 8px; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 10px; margin-top: 4px;">
+            <div class="form-group">
+              <label>Recibí ($):</label>
+              <input type="number" id="pago-cliente" placeholder="0" oninput="calcularCambio()">
+            </div>
+
+            <div id="box-cambio" class="cambio-box verde">
+              <p id="lbl-cambio">Cambio</p>
+              <h3 id="cart-cambio">$0.00</h3>
+            </div>
+
+            <button id="btn-cerrar-cuenta" class="btn" style="padding: 12px; font-size: 14px;" onclick="cobrarVenta()">Cerrar y Guardar Cuenta</button>
+          </div>
+        </div>
+
+        <!-- TOQUE RÁPIDO LÍQUIDOS -->
+        <div class="form-group" style="margin-top: 6px;">
+          <label>🧴 LÍQUIDOS (TOQUE RÁPIDO PARA 1 LITRO)</label>
+          <div id="grid-productos" class="quick-grid"></div>
+        </div>
+
+        <!-- TOQUE RÁPIDO COMBOS -->
+        <div class="form-group">
+          <label>🎁 COMBOS Y PROMOCIONES</label>
+          <div id="grid-promos" class="quick-grid"></div>
+        </div>
+
+        <!-- TOQUE RÁPIDO OTROS -->
+        <div class="form-group">
+          <label>🛍️ OTROS PRODUCTOS</label>
+          <div id="grid-otros" class="quick-grid"></div>
+        </div>
+      </div>
+
+      <!-- HISTORIAL DE HOY -->
+      <div class="card">
+        <div class="card-title">
+          <span>🕒 Historial de hoy</span>
+          <button class="btn btn-secondary" style="padding: 4px 10px; font-size: 11px;" onclick="descargarPDFHoy()">📄 Guardar</button>
+        </div>
+        <div id="history-container" class="cart-list" style="border:none; padding:0;">
+          <p style="font-size: 12px; color: var(--text-muted); text-align: center; padding: 10px;">No hay cuentas registradas hoy</p>
+        </div>
+      </div>
+
+      <!-- DÍAS ANTERIORES -->
+      <div class="card">
+        <div class="card-title">📅 Días anteriores</div>
+        <div id="archivo-dias-container" class="cart-list">
+          <p style="font-size: 12px; color: var(--text-muted); text-align: center; padding: 10px;">No hay días anteriores guardados esta semana</p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- PESTAÑA 2: INVENTARIO TAMBOS -->
+    <div id="tab-inventario" class="tab-content">
+      <div class="card">
+        <div class="card-title" id="inv-form-title">Agregar / Editar Producto Líquido</div>
+        <form onsubmit="guardarProducto(event)" style="display: flex; flex-direction: column; gap: 8px;">
+          <input type="hidden" id="prod-id">
+          <div class="form-group">
+            <label>Nombre del producto:</label>
+            <input type="text" id="prod-nombre" placeholder="ej. Fabuloso" required>
+          </div>
+          <div class="input-row">
+            <div class="form-group">
+              <label>Precio Venta/L ($):</label>
+              <input type="number" step="1" id="prod-precio" placeholder="0" required>
+            </div>
+            <div class="form-group">
+              <label>Ganancia real por litro ($):</label>
+              <input type="number" step="1" id="prod-ganancia" placeholder="0" required>
+            </div>
+          </div>
+          <div style="display: flex; gap: 6px; margin-top: 4px;">
+            <button type="submit" id="btn-save-prod" class="btn" style="flex: 1;">Guardar Producto</button>
+            <button type="button" id="btn-cancel-prod" onclick="cancelarEdicionProd()" class="btn btn-secondary" style="display: none;">Cancelar</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="card" style="overflow-x: auto;">
+        <div class="card-title">Lista de Productos Líquidos</div>
+        <table class="dark-table">
+          <thead>
+            <tr>
+              <th>Producto</th>
+              <th>Precio/L</th>
+              <th>Ganancia/L</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tabla-productos"></tbody>
+        </table>
+      </div>
+
+      <!-- RESPALDO DE DATOS -->
+      <div class="card">
+        <div class="card-title">💾 Respaldo de datos</div>
+        <p style="font-size: 11px; color: var(--text-muted);">Descarga un archivo (.json) con la copia completa de tu catálogo e historial por si cambias de celular o se borra la memoria del navegador.</p>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn btn-secondary" style="flex: 1;" onclick="exportarRespaldo()">⬇️️ Exportar</button>
+          <button class="btn btn-secondary" style="flex: 1;" onclick="document.getElementById('input-importar').click()">⬆️ Importar</button>
+        </div>
+        <input type="file" id="input-importar" accept="application/json" style="display: none;" onchange="importarRespaldo(event)">
+      </div>
+    </div>
+
+    <!-- PESTAÑA 3: COMBOS Y PROMOCIONES -->
+    <div id="tab-promos" class="tab-content">
+      <div class="card">
+        <div class="card-title" id="promo-form-title">Crear / Editar Combo o Promoción</div>
+        <form onsubmit="guardarPromo(event)" style="display: flex; flex-direction: column; gap: 8px;">
+          <input type="hidden" id="promo-id">
+          <div class="form-group">
+            <label>Nombre del Combo:</label>
+            <input type="text" id="promo-nombre" placeholder="ej. Paquete Limpieza" required>
+          </div>
+          <div class="form-group">
+            <label>Productos que incluye:</label>
+            <input type="text" id="promo-desc" placeholder="ej. 1L Cloro + 1L Fabuloso" required>
+          </div>
+          <div class="form-group">
+            <label>Precio de Venta Combo ($):</label>
+            <input type="number" step="1" id="promo-precio" placeholder="0" required>
+          </div>
+          <div style="display: flex; gap: 6px; margin-top: 4px;">
+            <button type="submit" id="btn-save-promo" class="btn" style="flex: 1;">Guardar Combo</button>
+            <button type="button" id="btn-cancel-promo" onclick="cancelarEdicionPromo()" class="btn btn-secondary" style="display: none;">Cancelar</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Combos Registrados</div>
+        <div id="lista-promos-mng" class="cart-list"></div>
+      </div>
+    </div>
+
+    <!-- PESTAÑA 4: OTROS PRODUCTOS -->
+    <div id="tab-otros" class="tab-content">
+      <div class="card">
+        <div class="card-title" id="otro-form-title">Agregar / Editar Otro Producto</div>
+        <form onsubmit="guardarOtro(event)" style="display: flex; flex-direction: column; gap: 8px;">
+          <input type="hidden" id="otro-id">
+          <div class="form-group">
+            <label>Nombre del Producto:</label>
+            <input type="text" id="otro-nombre" placeholder="ej. Fibra verde, Jalador" required>
+          </div>
+          <div class="form-group">
+            <label>Precio de Venta ($):</label>
+            <input type="number" step="1" id="otro-precio" placeholder="0" required>
+          </div>
+          <div style="display: flex; gap: 6px; margin-top: 4px;">
+            <button type="submit" id="btn-save-otro" class="btn" style="flex: 1;">Guardar Producto</button>
+            <button type="button" id="btn-cancel-otro" onclick="cancelarEdicionOtro()" class="btn btn-secondary" style="display: none;">Cancelar</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="card" style="overflow-x: auto;">
+        <div class="card-title">Lista de Otros Productos</div>
+        <table class="dark-table">
+          <thead>
+            <tr>
+              <th>Producto</th>
+              <th>Precio</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tabla-otros"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- PESTAÑA 5: REPORTES Y PDF -->
+    <div id="tab-reportes" class="tab-content">
+      <div class="card">
+        <div class="form-group">
+          <label>Modo de Reporte:</label>
+          <select id="tipo-reporte" onchange="actualizarVistaReporte()">
+            <option value="diario">📅 Reporte Diario (Seleccionar día)</option>
+            <option value="semanal">📆 Reporte Cierre Semanal</option>
+            <option value="mensual">🗓️ Reporte Cierre Mensual</option>
+          </select>
+        </div>
+
+        <div id="wrapper-fecha-diario" class="form-group">
+          <label>Ver día guardado:</label>
+          <input type="date" id="fecha-reporte-diario" onchange="renderReportePreview()">
+        </div>
+
+        <div id="wrapper-fecha-mensual" class="form-group" style="display:none;">
+          <label>Ver mes guardado:</label>
+          <input type="month" id="fecha-reporte-mensual" onchange="renderReportePreview()">
+        </div>
+
+        <button class="btn" onclick="descargarPDFActual()">📄 Descargar PDF</button>
+      </div>
+
+      <!-- VISTA PREVIA DEL REPORTE -->
+      <div id="pdf-preview-box" class="pdf-container-export"></div>
+    </div>
+
+  </div>
+
+  <!-- MODAL VER DETALLE DÍAS ANTERIORES -->
+  <div id="modal-detalle-dia" class="modal-overlay" onclick="if(event.target===this) cerrarModalDetalle();">
+    <div class="modal-card">
+      <h3 id="modal-titulo-dia" style="font-size:16px; font-weight:800;">Detalle del Día</h3>
+      <div id="modal-body-dia" class="cart-list" style="border:none;"></div>
+      <button class="btn" onclick="cerrarModalDetalle()">Cerrar</button>
+    </div>
+  </div>
+
+  <script>
+    // SERVICE WORKER OFFLINE
+    // Chrome RECHAZA registrar un Service Worker desde un blob: (ver sw.js para el error exacto),
+    // por eso ahora es un archivo real y separado (sw.js) que debe subirse junto a este index.html.
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').catch((err) => {
+          console.error('No se pudo activar el modo sin conexión (Service Worker):', err);
+        });
+      });
+    }
+
+    // LISTA BASE SIN VALORES CEROS RÍGIDOS PARA QUE NO APAREZCAN AL EDITAR
+    const productosBase = [
+      { id: 1, nombre: 'Ariel', precio: '', ganancia: '' },
+      { id: 2, nombre: 'Más color', precio: '', ganancia: '' },
+      { id: 3, nombre: 'Zote', precio: '', ganancia: '' },
+      { id: 4, nombre: 'Roma', precio: '', ganancia: '' },
+      { id: 5, nombre: 'Salvo', precio: '', ganancia: '' },
+      { id: 6, nombre: 'Cloro', precio: '', ganancia: '' },
+      { id: 7, nombre: 'Fabuloso', precio: '', ganancia: '' },
+      { id: 8, nombre: 'Suavitel amarillo', precio: '', ganancia: '' },
+      { id: 9, nombre: 'Suavitel azul', precio: '', ganancia: '' },
+      { id: 10, nombre: 'Desengrasante', precio: '', ganancia: '' },
+      { id: 11, nombre: 'Axion azul', precio: '', ganancia: '' },
+      { id: 12, nombre: 'Vel rosita', precio: '', ganancia: '' }
+    ];
+
+    const otrosBase = [
+      { id: 101, nombre: '1 Escudo', precio: 10 },
+      { id: 102, nombre: '1 Panmolive', precio: 15 },
+      { id: 103, nombre: '1 Dove', precio: 20 },
+      { id: 104, nombre: 'Bolsa escudo', precio: 50 },
+      { id: 105, nombre: 'Bolsa panmolive', precio: 50 },
+      { id: 106, nombre: 'Bolsa Dove', precio: 70 }
+    ];
+
+    let productos = JSON.parse(localStorage.getItem('pos_prods')) || productosBase;
+    let promos = JSON.parse(localStorage.getItem('pos_promos')) || [];
+    let otros = JSON.parse(localStorage.getItem('pos_otros')) || otrosBase;
+
+    let cuentas = JSON.parse(localStorage.getItem('pos_cuentas')) || [];
+    let archivoSemana = JSON.parse(localStorage.getItem('pos_archivo_semana')) || [];
+    let carrito = [];
+
+    document.addEventListener('DOMContentLoaded', () => {
+      verificarReinicioDiario();
+      renderFecha();
+      renderVentas();
+      renderInventario();
+      renderPromos();
+      renderOtros();
+      renderHistorialHoy();
+      renderDiasAnteriores();
+      actualizarStats();
+    });
+
+    // --- FECHA LOCAL (nunca usar toISOString, que da la fecha UTC y se desfasa) ---
+    function fechaLocalISO(d = new Date()) {
+      const ano = d.getFullYear();
+      const mes = String(d.getMonth() + 1).padStart(2, '0');
+      const dia = String(d.getDate()).padStart(2, '0');
+      return `${ano}-${mes}-${dia}`;
+    }
+
+    function parsearFechaLocal(strFecha) {
+      const partes = strFecha.split('-');
+      return new Date(parseInt(partes[0]), parseInt(partes[1]) - 1, parseInt(partes[2]));
+    }
+
+    // Lunes de la semana (lunes a domingo) a la que pertenece "fecha"
+    function obtenerLunesSemana(fecha) {
+      const d = new Date(fecha);
+      d.setHours(0, 0, 0, 0);
+      const diaSemana = d.getDay(); // 0=domingo, 1=lunes, ... 6=sábado
+      const diff = diaSemana === 0 ? -6 : 1 - diaSemana; // si es domingo, retrocede 6 días hasta el lunes
+      d.setDate(d.getDate() + diff);
+      return d;
+    }
+
+    function obtenerRangoSemana(strFechaRef) {
+      const ref = strFechaRef ? parsearFechaLocal(strFechaRef) : new Date();
+      const lunes = obtenerLunesSemana(ref);
+      const domingo = new Date(lunes);
+      domingo.setDate(domingo.getDate() + 6);
+      return { inicio: fechaLocalISO(lunes), fin: fechaLocalISO(domingo) };
+    }
+
+    function obtenerRangoMes(strFechaRef) {
+      const ref = strFechaRef ? parsearFechaLocal(strFechaRef) : new Date();
+      const inicio = new Date(ref.getFullYear(), ref.getMonth(), 1);
+      const fin = new Date(ref.getFullYear(), ref.getMonth() + 1, 0);
+      return { inicio: fechaLocalISO(inicio), fin: fechaLocalISO(fin) };
+    }
+
+    function obtenerFechaTextoLocal(strFecha) {
+      if (!strFecha) return '';
+      const partes = strFecha.split('-');
+      if (partes.length !== 3) return strFecha;
+      const ano = parseInt(partes[0]);
+      const mes = parseInt(partes[1]) - 1;
+      const dia = parseInt(partes[2]);
+      const d = new Date(ano, mes, dia);
+      return d.toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    }
+
+    function renderFecha() {
+      const hoyStr = fechaLocalISO();
+      document.getElementById('txt-fecha-hoy').innerText = obtenerFechaTextoLocal(hoyStr);
+    }
+
+    function switchTab(tab) {
+      ['ventas', 'inventario', 'promos', 'otros', 'reportes'].forEach(t => {
+        document.getElementById(`tab-${t}`).classList.remove('active');
+      });
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+
+      event.target.classList.add('active');
+      document.getElementById(`tab-${tab}`).classList.add('active');
+
+      if (tab === 'ventas') renderVentas();
+      if (tab === 'inventario') renderInventario();
+      if (tab === 'promos') renderPromos();
+      if (tab === 'otros') renderOtros();
+      if (tab === 'reportes') {
+        const hoyStr = fechaLocalISO();
+        document.getElementById('fecha-reporte-diario').value = hoyStr;
+        document.getElementById('fecha-reporte-mensual').value = hoyStr.slice(0, 7);
+        actualizarVistaReporte();
+      }
+    }
+
+    function cambiarModoCobro() {
+      const modo = document.getElementById('tipo-cobro').value;
+      if (modo === 'dinero') {
+        document.getElementById('wrap-cobro-dinero').style.display = 'flex';
+        document.getElementById('wrap-cobro-litros').style.display = 'none';
+      } else {
+        document.getElementById('wrap-cobro-dinero').style.display = 'none';
+        document.getElementById('wrap-cobro-litros').style.display = 'flex';
+      }
+    }
+
+    function verificarReinicioDiario() {
+      const hoyStr = fechaLocalISO();
+      const ultimaFecha = localStorage.getItem('pos_ultima_fecha');
+
+      if (ultimaFecha && ultimaFecha !== hoyStr) {
+        // La semana es de lunes a domingo; se reinicia justo cuando empieza el lunes (12am).
+        const lunesAyer = fechaLocalISO(obtenerLunesSemana(parsearFechaLocal(ultimaFecha)));
+        const lunesHoy = fechaLocalISO(obtenerLunesSemana(parsearFechaLocal(hoyStr)));
+
+        if (lunesAyer !== lunesHoy) {
+          // Cruzamos de domingo a lunes (o se saltaron días): empieza semana nueva, se limpia "Días anteriores".
+          // El historial completo NO se pierde, sigue guardado en "cuentas" para los reportes.
+          archivoSemana = [];
+        } else {
+          const cuentasAyer = cuentas.filter(c => c.fecha === ultimaFecha);
+          if (cuentasAyer.length > 0) {
+            archivoSemana = archivoSemana.filter(d => d.fecha !== ultimaFecha);
+            archivoSemana.unshift({ fecha: ultimaFecha, cuentas: cuentasAyer });
+          }
+        }
+        localStorage.setItem('pos_archivo_semana', JSON.stringify(archivoSemana));
+      }
+      localStorage.setItem('pos_ultima_fecha', hoyStr);
+    }
+
+    // CAJA Y VENTAS
+    function renderVentas() {
+      const pDinero = document.getElementById('prod-dinero');
+      const pLitros = document.getElementById('prod-litros');
+      const gP = document.getElementById('grid-productos');
+
+      pDinero.innerHTML = '<option value="" selected disabled>-- Seleccionar Producto --</option>';
+      pLitros.innerHTML = '<option value="" selected disabled>-- Seleccionar Producto --</option>';
+      gP.innerHTML = '';
+
+      productos.forEach(p => {
+        const precioTxt = p.precio ? `$${p.precio}/L` : '$0/L';
+        const option = `<option value="${p.id}">${p.nombre} (${precioTxt})</option>`;
+        pDinero.innerHTML += option;
+        pLitros.innerHTML += option;
+
+        gP.innerHTML += `
+          <button onclick="agregarRapido1Litro(${p.id})" class="quick-btn">
+            <p>${p.nombre}</p>
+            <span>${precioTxt}</span>
+          </button>
+        `;
+      });
+
+      const gPr = document.getElementById('grid-promos');
+      gPr.innerHTML = '';
+      if (promos.length === 0) {
+        gPr.innerHTML = '<p style="font-size:11px; color:var(--text-muted); grid-column:span 2;">No hay combos guardados.</p>';
+      } else {
+        promos.forEach(pr => {
+          gPr.innerHTML += `
+            <button onclick="agregarAlCarrito('${pr.nombre}', ${pr.precio || 0}, 0, '1 Combo', 0, null)" class="quick-btn">
+              <p style="color: #f59e0b;">${pr.nombre}</p>
+              <span class="desc">${pr.desc || ''}</span>
+              <span>$${pr.precio || 0}</span>
+            </button>
+          `;
+        });
+      }
+
+      const gOt = document.getElementById('grid-otros');
+      gOt.innerHTML = '';
+      otros.forEach(o => {
+        gOt.innerHTML += `
+          <button onclick="agregarAlCarrito('${o.nombre}', ${o.precio || 0}, 0, '1 Pza', 0, null)" class="quick-btn">
+            <p>${o.nombre}</p>
+            <span>$${o.precio || 0}</span>
+          </button>
+        `;
+      });
+
+      renderCarrito();
+    }
+
+    function agregarPorDineroRedondeado() {
+      const monto = Math.round(parseFloat(document.getElementById('monto-dinero').value)) || 0;
+      const valSelect = document.getElementById('prod-dinero').value;
+
+      if (!valSelect) return alert("Selecciona un producto.");
+      const prod = productos.find(p => p.id === parseInt(valSelect));
+
+      if (!monto || monto <= 0 || !prod) return alert("Ingresa un monto válido.");
+      if (!prod.precio || prod.precio <= 0) return alert(`"${prod.nombre}" no tiene precio configurado. Ponle un precio en Inventario antes de venderlo.`);
+
+      const precioReal = prod.precio || 0;
+      const gananciaReal = prod.ganancia || 0;
+      const litrosCalculados = precioReal > 0 ? (monto / precioReal) : 0;
+      const cobroFinal = monto;
+      const gananciaTotal = Math.ceil(gananciaReal * litrosCalculados);
+
+      agregarAlCarrito(prod.nombre, cobroFinal, gananciaTotal, `${litrosCalculados.toFixed(2)} L`, litrosCalculados, prod.id);
+      document.getElementById('monto-dinero').value = '';
+      document.getElementById('prod-dinero').value = '';
+    }
+
+    function agregarPorLitrosDirectos() {
+      const litros = parseFloat(document.getElementById('cant-litros').value) || 0;
+      const valSelect = document.getElementById('prod-litros').value;
+
+      if (!valSelect) return alert("Selecciona un producto.");
+      const prod = productos.find(p => p.id === parseInt(valSelect));
+
+      if (!litros || litros <= 0 || !prod) return alert("Ingresa litros válidos.");
+      if (!prod.precio || prod.precio <= 0) return alert(`"${prod.nombre}" no tiene precio configurado. Ponle un precio en Inventario antes de venderlo.`);
+
+      const precioReal = prod.precio || 0;
+      const gananciaReal = prod.ganancia || 0;
+      const subtotalCalculado = litros * precioReal;
+      const subtotalRedondeado = Math.ceil(subtotalCalculado);
+      const gananciaCalculada = Math.ceil(litros * gananciaReal);
+
+      agregarAlCarrito(prod.nombre, subtotalRedondeado, gananciaCalculada, `${litros} L`, litros, prod.id);
+      document.getElementById('cant-litros').value = '';
+      document.getElementById('prod-litros').value = '';
+    }
+
+    function agregarAlCarrito(nombre, subtotal, ganancia, cantTxt, litrosNum, prodId) {
+      const hora = new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: true });
+      carrito.push({ hora, producto: nombre, cantidad: cantTxt, litros: litrosNum, subtotal, ganancia: ganancia, prodId });
+      renderCarrito();
+    }
+
+    // Botón de toque rápido (1 L): también debe bloquearse si el producto no tiene precio.
+    function agregarRapido1Litro(id) {
+      const prod = productos.find(p => p.id === id);
+      if (!prod) return;
+      if (!prod.precio || prod.precio <= 0) return alert(`"${prod.nombre}" no tiene precio configurado. Ponle un precio en Inventario antes de venderlo.`);
+      agregarAlCarrito(prod.nombre, prod.precio || 0, prod.ganancia || 0, '1 L', 1, prod.id);
+    }
+
+    function renderCarrito() {
+      const cont = document.getElementById('cart-container');
+      const wrapArriba = document.getElementById('wrapper-nota-arriba');
+
+      cont.innerHTML = '';
+
+      if (carrito.length === 0) {
+        wrapArriba.style.display = 'none';
+        document.getElementById('cart-total').innerText = `$0.00`;
+        document.getElementById('cart-cambio').innerText = `$0.00`;
+        return;
+      }
+
+      wrapArriba.style.display = 'flex';
+
+      let total = 0;
+      carrito.forEach((item, idx) => {
+        total += item.subtotal;
+        cont.innerHTML += `
+          <div class="cart-item">
+            <div class="cart-item-info">
+              <h4>${item.producto}</h4>
+              <p>${item.cantidad} — <span style="color:#2dd4bf; font-weight:bold;">$${item.subtotal.toFixed(2)}</span></p>
+            </div>
+            <button onclick="carrito.splice(${idx},1); renderCarrito();" class="btn-icon" title="Eliminar ítem">🗑️</button>
+          </div>
+        `;
+      });
+
+      document.getElementById('cart-total').innerText = `$${total.toFixed(2)}`;
+      calcularCambio();
+    }
+
+    function calcularCambio() {
+      const total = carrito.reduce((s, i) => s + i.subtotal, 0);
+      const pagoVal = document.getElementById('pago-cliente').value;
+      const pago = Math.round(parseFloat(pagoVal)) || 0;
+      const box = document.getElementById('box-cambio');
+      const lbl = document.getElementById('lbl-cambio');
+      const txt = document.getElementById('cart-cambio');
+      const btnCerrar = document.getElementById('btn-cerrar-cuenta');
+
+      if (pago < total) {
+        box.className = "cambio-box rojo";
+        lbl.style.display = "none";
+        txt.innerText = `Faltan $${(total - pago).toFixed(2)}`;
+        btnCerrar.disabled = true;
+        btnCerrar.style.opacity = "0.5";
+      } else {
+        box.className = "cambio-box verde";
+        lbl.style.display = "block";
+        lbl.innerText = "Cambio";
+        txt.innerText = `$${(pago - total).toFixed(2)}`;
+        btnCerrar.disabled = false;
+        btnCerrar.style.opacity = "1";
+      }
+    }
+
+    function cobrarVenta() {
+      if (carrito.length === 0) return;
+      const total = carrito.reduce((s, i) => s + i.subtotal, 0);
+      const pago = Math.round(parseFloat(document.getElementById('pago-cliente').value)) || 0;
+
+      if (pago < total) return alert("Aún no completas el total de la cuenta.");
+
+      const fechaHoy = fechaLocalISO();
+      const gananciaTotal = carrito.reduce((s, i) => s + i.ganancia, 0);
+      const horaLocal = new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: true });
+
+      cuentas.unshift({
+        fecha: fechaHoy,
+        hora: horaLocal,
+        items: [...carrito],
+        total: total,
+        ganancia: gananciaTotal,
+        pago: pago,
+        cambio: pago - total
+      });
+
+      localStorage.setItem('pos_cuentas', JSON.stringify(cuentas));
+
+      vaciarCarrito();
+      renderHistorialHoy();
+      actualizarStats();
+    }
+
+    function vaciarCarrito() {
+      carrito = [];
+      document.getElementById('pago-cliente').value = '';
+      renderCarrito();
+    }
+
+    // HISTORIAL DE HOY PANTALLA
+    function renderHistorialHoy() {
+      const cont = document.getElementById('history-container');
+      const fechaHoy = fechaLocalISO();
+      const cuentasHoy = cuentas.filter(c => c.fecha === fechaHoy);
+
+      if (cuentasHoy.length === 0) {
+        cont.innerHTML = '<p style="font-size: 12px; color: var(--text-muted); text-align: center; padding: 10px;">No hay cuentas registradas hoy</p>';
+        return;
+      }
+
+      cont.innerHTML = '';
+      cuentasHoy.forEach((c, idx) => {
+        let itemsHTML = '';
+        c.items.forEach(item => {
+          itemsHTML += `
+            <div class="ticket-item-row">
+              <div>
+                <div class="p-title">${item.producto}</div>
+                <div class="p-sub">${item.cantidad} — Ganancia: $${(item.ganancia || 0).toFixed(2)}</div>
+              </div>
+              <div class="p-price">$${(item.subtotal || 0).toFixed(2)}</div>
+            </div>
+          `;
+        });
+
+        cont.innerHTML += `
+          <div class="ticket-card">
+            ${itemsHTML}
+            <div class="ticket-footer">
+              <div>
+                <div class="meta-time">${c.hora || 'Venta'}</div>
+                <div class="meta-details">Recibí: $${(c.pago || c.total).toFixed(2)} · Cambio: $${(c.cambio || 0).toFixed(2)}</div>
+              </div>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span class="total-green">$${(c.total || 0).toFixed(2)}</span>
+                <button onclick="eliminarCuentaHoy(${idx})" class="btn-icon" title="Borrar venta">🗑️</button>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    function eliminarCuentaHoy(idx) {
+      const fechaHoy = fechaLocalISO();
+      const indicesReales = [];
+      cuentas.forEach((c, i) => { if (c.fecha === fechaHoy) indicesReales.push(i); });
+
+      const idxReal = indicesReales[idx];
+      if (idxReal !== undefined) {
+        cuentas.splice(idxReal, 1);
+        localStorage.setItem('pos_cuentas', JSON.stringify(cuentas));
+        renderHistorialHoy();
+        actualizarStats();
+      }
+    }
+
+    function renderDiasAnteriores() {
+      const cont = document.getElementById('archivo-dias-container');
+      if (archivoSemana.length === 0) {
+        cont.innerHTML = '<p style="font-size: 12px; color: var(--text-muted); text-align: center; padding: 10px;">No hay días anteriores guardados esta semana</p>';
+        return;
+      }
+
+      cont.innerHTML = '';
+      archivoSemana.forEach((dia, idx) => {
+        const totalVentasDia = dia.cuentas.reduce((s, c) => s + c.total, 0);
+        const fechaLegible = obtenerFechaTextoLocal(dia.fecha);
+
+        cont.innerHTML += `
+          <div class="cart-item">
+            <div class="cart-item-info">
+              <h4 style="text-transform: capitalize;">${fechaLegible}</h4>
+              <p>${dia.cuentas.length} cuentas registradas</p>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="color: #2dd4bf; font-weight: 800; font-size: 14px;">$${totalVentasDia.toFixed(2)}</span>
+              <button onclick="verDetalleDiaAnterior(${idx})" class="btn-icon" title="Ver detalle">👁️</button>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    function verDetalleDiaAnterior(idx) {
+      const dia = archivoSemana[idx];
+      if (!dia) return;
+
+      const fechaLegible = obtenerFechaTextoLocal(dia.fecha);
+      document.getElementById('modal-titulo-dia').innerText = `📅 ${fechaLegible}`;
+
+      const body = document.getElementById('modal-body-dia');
+      body.innerHTML = '';
+
+      let totalDia = 0;
+      let gananciaDia = 0;
+      let litrosDia = 0;
+      dia.cuentas.forEach(c => {
+        totalDia += c.total;
+        gananciaDia += Number(c.ganancia) || 0;
+        c.items.forEach(i => { litrosDia += Number(i.litros) || 0; });
+        let itemsTxt = c.items.map(i => `${i.producto} (${i.cantidad})`).join(', ');
+        body.innerHTML += `
+          <div class="cart-item" style="flex-direction: column; align-items: flex-start;">
+            <div style="display: flex; justify-content: space-between; width: 100%;">
+              <span style="font-size: 11px; color: var(--text-muted);">${c.hora || 'Venta'}</span>
+              <span style="color: #2dd4bf; font-weight: 700;">$${c.total.toFixed(2)}</span>
+            </div>
+            <p style="font-size: 12px; color: white;">${itemsTxt}</p>
+          </div>
+        `;
+      });
+
+      body.innerHTML += `
+        <div style="margin-top: 8px; padding-top: 8px; border-top: 1px dashed rgba(255,255,255,0.15); display:flex; flex-direction:column; gap:4px;">
+          <p style="font-size: 13px; color: var(--text-muted); text-align: right;">Litros vendidos: <b style="color:white;">${litrosDia.toFixed(2)} L</b></p>
+          <p style="font-size: 13px; color: var(--text-muted); text-align: right;">Ganancia del día: <b style="color:#22c55e;">$${gananciaDia.toFixed(2)}</b></p>
+          <p style="font-size: 15px; font-weight: 800; text-align: right; color: white;">Total del día: $${totalDia.toFixed(2)}</p>
+        </div>
+      `;
+      document.getElementById('modal-detalle-dia').style.display = 'flex';
+    }
+
+    function cerrarModalDetalle() {
+      document.getElementById('modal-detalle-dia').style.display = 'none';
+    }
+
+    function actualizarStats() {
+      const hoyStr = fechaLocalISO();
+      const cuentasHoy = cuentas.filter(c => c.fecha === hoyStr);
+      let totalV = 0, totalG = 0;
+
+      cuentasHoy.forEach(c => {
+        totalV += Number(c.total) || 0;
+        totalG += Number(c.ganancia) || 0;
+      });
+
+      document.getElementById('txt-num-cuentas').innerText = `Cuentas (${cuentasHoy.length})`;
+      document.getElementById('txt-total-ventas').innerText = `$${totalV.toFixed(2)}`;
+      document.getElementById('txt-total-ganancias').innerText = `$${totalG.toFixed(2)}`;
+    }
+
+    // INVENTARIO TAMBOS
+    function guardarProducto(e) {
+      e.preventDefault();
+      const id = document.getElementById('prod-id').value;
+      const nombre = document.getElementById('prod-nombre').value;
+      const precioVal = document.getElementById('prod-precio').value;
+      const gananciaVal = document.getElementById('prod-ganancia').value;
+
+      const precio = precioVal !== '' ? Math.round(parseFloat(precioVal)) : '';
+      const ganancia = gananciaVal !== '' ? Math.round(parseFloat(gananciaVal)) : '';
+
+      if (id) {
+        const index = productos.findIndex(p => p.id == id);
+        if (index !== -1) productos[index] = { ...productos[index], nombre, precio, ganancia };
+      } else {
+        productos.push({ id: Date.now(), nombre, precio, ganancia });
+      }
+
+      localStorage.setItem('pos_prods', JSON.stringify(productos));
+      cancelarEdicionProd();
+      renderInventario();
+      renderVentas();
+    }
+
+    function editarProducto(id) {
+      const p = productos.find(x => x.id === id);
+      if (!p) return;
+      document.getElementById('prod-id').value = p.id;
+      document.getElementById('prod-nombre').value = p.nombre;
+      document.getElementById('prod-precio').value = p.precio !== undefined ? p.precio : '';
+      document.getElementById('prod-ganancia').value = p.ganancia !== undefined ? p.ganancia : '';
+      document.getElementById('inv-form-title').innerText = "Editar Producto Líquido";
+      document.getElementById('btn-save-prod').innerText = "Actualizar Producto";
+      document.getElementById('btn-cancel-prod').style.display = 'block';
+    }
+
+    function cancelarEdicionProd() {
+      document.getElementById('prod-id').value = '';
+      document.getElementById('prod-nombre').value = '';
+      document.getElementById('prod-precio').value = '';
+      document.getElementById('prod-ganancia').value = '';
+      document.getElementById('inv-form-title').innerText = "Agregar / Editar Producto Líquido";
+      document.getElementById('btn-save-prod').innerText = "Guardar Producto";
+      document.getElementById('btn-cancel-prod').style.display = 'none';
+    }
+
+    function renderInventario() {
+      const tb = document.getElementById('tabla-productos');
+      tb.innerHTML = '';
+      productos.forEach(p => {
+        tb.innerHTML += `
+          <tr>
+            <td><b>${p.nombre}</b></td>
+            <td>$${p.precio !== '' ? p.precio : 0}/L</td>
+            <td>$${p.ganancia !== '' ? p.ganancia : 0}/L</td>
+            <td>
+              <button onclick="editarProducto(${p.id})" class="btn-icon" title="Editar">✏️</button>
+              <button onclick="eliminarProd(${p.id})" class="btn-icon" title="Eliminar">🗑️</button>
+            </td>
+          </tr>
+        `;
+      });
+    }
+
+    function eliminarProd(id) {
+      productos = productos.filter(p => p.id !== id);
+      localStorage.setItem('pos_prods', JSON.stringify(productos));
+      renderInventario();
+      renderVentas();
+    }
+
+    // RESPALDO DE DATOS
+    function exportarRespaldo() {
+      const respaldo = { productos, promos, otros, cuentas, archivoSemana, exportadoEl: new Date().toISOString() };
+      const blob = new Blob([JSON.stringify(respaldo, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Respaldo_POS_${fechaLocalISO()}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    function importarRespaldo(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = JSON.parse(e.target.result);
+          if (Array.isArray(data.productos)) productos = data.productos;
+          if (Array.isArray(data.promos)) promos = data.promos;
+          if (Array.isArray(data.otros)) otros = data.otros;
+          if (Array.isArray(data.cuentas)) cuentas = data.cuentas;
+          if (Array.isArray(data.archivoSemana)) archivoSemana = data.archivoSemana;
+
+          localStorage.setItem('pos_prods', JSON.stringify(productos));
+          localStorage.setItem('pos_promos', JSON.stringify(promos));
+          localStorage.setItem('pos_otros', JSON.stringify(otros));
+          localStorage.setItem('pos_cuentas', JSON.stringify(cuentas));
+          localStorage.setItem('pos_archivo_semana', JSON.stringify(archivoSemana));
+
+          renderVentas();
+          renderInventario();
+          renderPromos();
+          renderOtros();
+          renderHistorialHoy();
+          renderDiasAnteriores();
+          actualizarStats();
+          alert('Respaldo restaurado correctamente.');
+        } catch (err) {
+          alert('Archivo de respaldo no válido.');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    // COMBOS Y PROMOCIONES
+    function guardarPromo(e) {
+      e.preventDefault();
+      const id = document.getElementById('promo-id').value;
+      const nombre = document.getElementById('promo-nombre').value;
+      const desc = document.getElementById('promo-desc').value;
+      const precioVal = document.getElementById('promo-precio').value;
+      const precio = precioVal !== '' ? Math.round(parseFloat(precioVal)) : '';
+
+      if (id) {
+        const idx = promos.findIndex(p => p.id == id);
+        if (idx !== -1) promos[idx] = { ...promos[idx], nombre, desc, precio };
+      } else {
+        promos.push({ id: Date.now(), nombre, desc, precio });
+      }
+
+      localStorage.setItem('pos_promos', JSON.stringify(promos));
+      cancelarEdicionPromo();
+      renderPromos();
+      renderVentas();
+    }
+
+    function editarPromo(id) {
+      const p = promos.find(x => x.id === id);
+      if (!p) return;
+      document.getElementById('promo-id').value = p.id;
+      document.getElementById('promo-nombre').value = p.nombre;
+      document.getElementById('promo-desc').value = p.desc;
+      document.getElementById('promo-precio').value = p.precio !== undefined ? p.precio : '';
+      document.getElementById('promo-form-title').innerText = "Editar Combo";
+      document.getElementById('btn-save-promo').innerText = "Actualizar Combo";
+      document.getElementById('btn-cancel-promo').style.display = 'block';
+    }
+
+    function cancelarEdicionPromo() {
+      document.getElementById('promo-id').value = '';
+      document.getElementById('promo-nombre').value = '';
+      document.getElementById('promo-desc').value = '';
+      document.getElementById('promo-precio').value = '';
+      document.getElementById('promo-form-title').innerText = "Crear / Editar Combo o Promoción";
+      document.getElementById('btn-save-promo').innerText = "Guardar Combo";
+      document.getElementById('btn-cancel-promo').style.display = 'none';
+    }
+
+    function renderPromos() {
+      const c = document.getElementById('lista-promos-mng');
+      c.innerHTML = '';
+      promos.forEach(p => {
+        c.innerHTML += `
+          <div class="cart-item">
+            <div class="cart-item-info">
+              <h4 style="color:#f59e0b;">${p.nombre}</h4>
+              <p>${p.desc} — <b>$${p.precio !== '' ? p.precio : 0}</b></p>
+            </div>
+            <div>
+              <button onclick="editarPromo(${p.id})" class="btn-icon" title="Editar">✏️</button>
+              <button onclick="eliminarPromo(${p.id})" class="btn-icon" title="Eliminar">🗑</button>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    function eliminarPromo(id) {
+      promos = promos.filter(p => p.id !== id);
+      localStorage.setItem('pos_promos', JSON.stringify(promos));
+      renderPromos();
+      renderVentas();
+    }
+
+    // OTROS PRODUCTOS
+    function guardarOtro(e) {
+      e.preventDefault();
+      const id = document.getElementById('otro-id').value;
+      const nombre = document.getElementById('otro-nombre').value;
+      const precioVal = document.getElementById('otro-precio').value;
+      const precio = precioVal !== '' ? Math.round(parseFloat(precioVal)) : '';
+
+      if (id) {
+        const idx = otros.findIndex(o => o.id == id);
+        if (idx !== -1) otros[idx] = { ...otros[idx], nombre, precio };
+      } else {
+        otros.push({ id: Date.now(), nombre, precio });
+      }
+
+      localStorage.setItem('pos_otros', JSON.stringify(otros));
+      cancelarEdicionOtro();
+      renderOtros();
+      renderVentas();
+    }
+
+    function editarOtro(id) {
+      const o = otros.find(x => x.id === id);
+      if (!o) return;
+      document.getElementById('otro-id').value = o.id;
+      document.getElementById('otro-nombre').value = o.nombre;
+      document.getElementById('otro-precio').value = o.precio !== undefined ? o.precio : '';
+      document.getElementById('otro-form-title').innerText = "Editar Otro Producto";
+      document.getElementById('btn-save-otro').innerText = "Actualizar Producto";
+      document.getElementById('btn-cancel-otro').style.display = 'block';
+    }
+
+    function cancelarEdicionOtro() {
+      document.getElementById('otro-id').value = '';
+      document.getElementById('otro-nombre').value = '';
+      document.getElementById('otro-precio').value = '';
+      document.getElementById('otro-form-title').innerText = "Agregar / Editar Otro Producto";
+      document.getElementById('btn-save-otro').innerText = "Guardar Producto";
+      document.getElementById('btn-cancel-otro').style.display = 'none';
+    }
+
+    function renderOtros() {
+      const tb = document.getElementById('tabla-otros');
+      tb.innerHTML = '';
+      otros.forEach(o => {
+        tb.innerHTML += `
+          <tr>
+            <td><b>${o.nombre}</b></td>
+            <td>$${o.precio !== '' ? o.precio : 0}</td>
+            <td>
+              <button onclick="editarOtro(${o.id})" class="btn-icon" title="Editar">✏️</button>
+              <button onclick="eliminarOtro(${o.id})" class="btn-icon" title="Eliminar">🗑️</button>
+            </td>
+          </tr>
+        `;
+      });
+    }
+
+    function eliminarOtro(id) {
+      otros = otros.filter(o => o.id !== id);
+      localStorage.setItem('pos_otros', JSON.stringify(otros));
+      renderOtros();
+      renderVentas();
+    }
+
+    // GENERADOR PDF — ahora con 3 modos: diario, semanal (lunes a domingo) y mensual (mes calendario).
+    // Los reportes son simples filtros de fecha sobre "cuentas" (que conserva TODO el historial,
+    // nunca se borra), así que "semanal"/"mensual" nunca pierden datos ni muestran historial completo de más.
+    function construirHTMLPDF(modo, fechaSel, incluirLitrosPorProducto) {
+      let titulo = "📜 Reporte de Ventas";
+      let subtitulo = "";
+      let cuentasFiltradas = [];
+
+      if (modo === 'semanal') {
+        const { inicio, fin } = obtenerRangoSemana(fechaSel || fechaLocalISO());
+        subtitulo = `Cierre Semanal: ${obtenerFechaTextoLocal(inicio)} al ${obtenerFechaTextoLocal(fin)}`;
+        cuentasFiltradas = cuentas.filter(c => c.fecha >= inicio && c.fecha <= fin);
+      } else if (modo === 'mensual') {
+        const refFecha = fechaSel ? `${fechaSel}-01` : fechaLocalISO();
+        const { inicio, fin } = obtenerRangoMes(refFecha);
+        const nombreMes = parsearFechaLocal(inicio).toLocaleDateString('es-MX', { month: 'long', year: 'numeric' });
+        subtitulo = `Cierre Mensual: ${nombreMes}`;
+        cuentasFiltradas = cuentas.filter(c => c.fecha >= inicio && c.fecha <= fin);
+      } else {
+        subtitulo = obtenerFechaTextoLocal(fechaSel);
+        cuentasFiltradas = cuentas.filter(c => c.fecha === fechaSel);
+      }
+
+      // "cuentas" guarda la más reciente primero (unshift al cobrar), así que aquí se invierte
+      // el orden para que el PDF se lea de forma natural: la primera venta del periodo arriba,
+      // la última abajo (antes salía al revés).
+      cuentasFiltradas = cuentasFiltradas.slice().reverse();
+
+      let totalVentas = 0;
+      let totalGanancias = 0;
+      let totalCuentas = cuentasFiltradas.length;
+      let filasHTML = "";
+
+      cuentasFiltradas.forEach(c => {
+        c.items.forEach(i => {
+          totalVentas += i.subtotal;
+          totalGanancias += i.ganancia;
+          filasHTML += `
+            <tr>
+              <td>${i.hora || c.hora || '--:--'}</td>
+              <td><b>${i.producto}</b></td>
+              <td>${i.cantidad}</td>
+              <td>$${i.subtotal.toFixed(2)}</td>
+              <td>$${i.ganancia.toFixed(2)}</td>
+            </tr>
+          `;
+        });
+      });
+
+      if (cuentasFiltradas.length === 0) {
+        filasHTML = `<tr><td colspan="5" style="text-align:center; color:#8e8e93; padding:15px;">No hay ventas registradas en este periodo.</td></tr>`;
+      }
+
+      // Desglose de litros vendidos por producto (solo para el apartado de Reportes, no para
+      // el PDF rápido de "Historial de hoy"). Se junta diario, semanal o mensual según el modo,
+      // porque usa las mismas cuentasFiltradas ya filtradas por el rango correspondiente.
+      let litrosPorProductoHTML = '';
+      if (incluirLitrosPorProducto) {
+        const mapaLitros = {};
+        cuentasFiltradas.forEach(c => {
+          c.items.forEach(i => {
+            const lit = Number(i.litros) || 0;
+            if (lit > 0) {
+              mapaLitros[i.producto] = (mapaLitros[i.producto] || 0) + lit;
+            }
+          });
+        });
+        const listaLitros = Object.entries(mapaLitros).sort((a, b) => b[1] - a[1]);
+        if (listaLitros.length > 0) {
+          litrosPorProductoHTML = `
+            <div class="pdf-summary-card">
+              <div class="pdf-summary-title">🪣 Litros vendidos por producto</div>
+              ${listaLitros.map(([nombre, litros]) => `
+                <div class="pdf-summary-row">
+                  <span>${nombre}</span>
+                  <b>${litros.toFixed(2)} L</b>
+                </div>
+              `).join('')}
+            </div>
+          `;
+        }
+      }
+
+      return `
+        <div class="pdf-container-export">
+          <div class="pdf-header-title">${titulo}</div>
+          <div class="pdf-header-date">${subtitulo}</div>
+
+          <table class="pdf-table-clean">
+            <thead>
+              <tr>
+                <th>HORA</th>
+                <th>PRODUCTO / PROMO</th>
+                <th>CANTIDAD</th>
+                <th>SUBTOTAL</th>
+                <th>GANANCIA</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${filasHTML}
+            </tbody>
+          </table>
+
+          <div class="pdf-summary-card">
+            <div class="pdf-summary-title">💰 Resumen</div>
+            <div class="pdf-summary-row">
+              <span>Total de cuentas</span>
+              <b>${totalCuentas}</b>
+            </div>
+            <div class="pdf-summary-row">
+              <span>Total de ventas</span>
+              <b>$${totalVentas.toFixed(2)}</b>
+            </div>
+            <div class="pdf-summary-row total-bold">
+              <span>Ganancias del día</span>
+              <b>$${totalGanancias.toFixed(2)}</b>
+            </div>
+          </div>
+
+          ${litrosPorProductoHTML}
+        </div>
+      `;
+    }
+
+    function actualizarVistaReporte() {
+      const tipo = document.getElementById('tipo-reporte').value;
+      document.getElementById('wrapper-fecha-diario').style.display = (tipo === 'diario') ? 'flex' : 'none';
+      document.getElementById('wrapper-fecha-mensual').style.display = (tipo === 'mensual') ? 'flex' : 'none';
+      renderReportePreview();
+    }
+
+    function renderReportePreview() {
+      const tipo = document.getElementById('tipo-reporte').value;
+      const previewBox = document.getElementById('pdf-preview-box');
+      let fechaSel;
+      if (tipo === 'mensual') {
+        fechaSel = document.getElementById('fecha-reporte-mensual').value; // "YYYY-MM"
+      } else {
+        fechaSel = document.getElementById('fecha-reporte-diario').value; // "YYYY-MM-DD"
+      }
+      // El apartado de Reportes SIEMPRE incluye el desglose de litros por producto (diario, semanal o mensual).
+      previewBox.innerHTML = construirHTMLPDF(tipo, fechaSel, true);
+    }
+
+    // Botón "Guardar" de Historial de hoy (pestaña Caja): PDF simple, SIN el desglose de litros por producto.
+    function descargarPDFHoy() {
+      const hoyStr = fechaLocalISO();
+      descargarPDFPorFecha(hoyStr, false);
+    }
+
+    function descargarPDFActual() {
+      const tipo = document.getElementById('tipo-reporte').value;
+
+      if (tipo === 'semanal') {
+        const { inicio, fin } = obtenerRangoSemana(fechaLocalISO());
+        generarPDFDesdeHTML(construirHTMLPDF('semanal', fechaLocalISO(), true), `Cierre_Semanal_${inicio}_a_${fin}.pdf`);
+      } else if (tipo === 'mensual') {
+        const fechaSel = document.getElementById('fecha-reporte-mensual').value;
+        generarPDFDesdeHTML(construirHTMLPDF('mensual', fechaSel, true), `Cierre_Mensual_${fechaSel}.pdf`);
+      } else {
+        const fechaSel = document.getElementById('fecha-reporte-diario').value;
+        // Botón "Descargar PDF" dentro de Reportes (modo diario): SÍ incluye el desglose de litros.
+        descargarPDFPorFecha(fechaSel, true);
+      }
+    }
+
+    function descargarPDFPorFecha(fechaTarget, incluirLitrosPorProducto = false) {
+      const htmlContent = construirHTMLPDF('diario', fechaTarget, incluirLitrosPorProducto);
+      generarPDFDesdeHTML(htmlContent, `Reporte_Ventas_${fechaTarget}.pdf`);
+    }
+
+    // --- GENERACIÓN DEL ARCHIVO PDF ---
+    // IMPORTANTE: el nodo que se le pasa a html2pdf (.from()) nunca debe tener position:absolute/fixed
+    // en sí mismo, porque html2pdf lo CLONA y lo mete en su propio contenedor con height:auto;
+    // si el nodo original ya es position:absolute/fixed, ese contenedor colapsa a altura 0 y el PDF
+    // sale en blanco. Por eso aquí la posición "fuera de pantalla" se pone en un wrapper EXTERIOR
+    // que nunca se pasa a html2pdf, y el nodo que sí se le pasa queda con posición normal (static).
+    function calcularEscalaSegura(altoPx) {
+      const LIMITE_PX_ALTO_CANVAS = 13000;
+      let escala = 2;
+      if (altoPx * escala > LIMITE_PX_ALTO_CANVAS) {
+        escala = Math.max(1, LIMITE_PX_ALTO_CANVAS / altoPx);
+      }
+      return escala;
+    }
+
+    function generarPDFDesdeHTML(htmlContent, filename) {
+      const wrapperFuera = document.createElement('div');
+      wrapperFuera.style.position = 'fixed';
+      wrapperFuera.style.top = '0';
+      wrapperFuera.style.left = '-9999px';
+      wrapperFuera.style.zIndex = '-1';
+
+      const contenidoPDF = document.createElement('div');
+      contenidoPDF.style.width = '600px';
+      contenidoPDF.style.background = '#ffffff';
+      contenidoPDF.innerHTML = htmlContent;
+
+      wrapperFuera.appendChild(contenidoPDF);
+      document.body.appendChild(wrapperFuera);
+
+      const altoPx = contenidoPDF.scrollHeight || 800;
+      const escala = calcularEscalaSegura(altoPx);
+
+      const opt = {
+        margin: 0.3,
+        filename: filename,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: escala, useCORS: true, logging: false },
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
+        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+      };
+
+      const limpiar = () => { if (wrapperFuera.parentNode) document.body.removeChild(wrapperFuera); };
+
+      html2pdf().set(opt).from(contenidoPDF).save().then(limpiar).catch((err) => {
+        console.error('Error generando PDF:', err);
+        alert('Hubo un problema al generar el PDF. Intenta de nuevo.');
+        limpiar();
+      });
+    }
+  </script>
+</body>
+</html>
