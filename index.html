@@ -368,13 +368,16 @@
           <div id="wrap-cobro-dinero" class="input-row" style="display: none;">
             <div class="form-group" style="flex: 2;">
               <label>Producto</label>
-              <select id="prod-dinero"></select>
+              <select id="prod-dinero" onchange="previsualizarDinero()"></select>
             </div>
             <div class="form-group" style="flex: 1;">
               <label>Monto ($)</label>
-              <input type="number" step="1" id="monto-dinero" placeholder="0">
+              <input type="number" step="1" id="monto-dinero" placeholder="0" oninput="previsualizarDinero()">
             </div>
             <button class="btn" onclick="agregarPorDineroRedondeado()">+ Agregar</button>
+            <div class="form-group" style="flex-basis: 100%; margin: 0;">
+              <p id="txt-preview-dinero" style="font-size: 12px; color: #2dd4bf; font-weight: 600; min-height: 14px;"></p>
+            </div>
           </div>
         </div>
 
@@ -831,6 +834,40 @@
       renderCarrito();
     }
 
+    // Redondea hacia arriba al litro COMPLETO según el dinero ofrecido (ej. $50 de un producto de
+    // $18/L son 2.78L -> se redondea a 3L, cobrando lo que valen esos 3L completos: $54).
+    // Se resta un margen mínimo antes de Math.ceil para que montos que caen EXACTOS en un litro
+    // (ej. $36 = 2L) no se pasen de más por un error de punto flotante.
+    function calcularLitrosRedondeados(monto, precio) {
+      if (!precio || precio <= 0) return { litros: 0, subtotal: 0 };
+      const litrosExactos = monto / precio;
+      const litros = Math.max(0, Math.ceil(litrosExactos - 0.001));
+      const subtotal = litros * precio;
+      return { litros, subtotal };
+    }
+
+    function previsualizarDinero() {
+      const texto = document.getElementById('txt-preview-dinero');
+      if (!texto) return;
+      const monto = Math.round(parseFloat(document.getElementById('monto-dinero').value)) || 0;
+      const valSelect = document.getElementById('prod-dinero').value;
+      if (!monto || monto <= 0 || !valSelect) { texto.innerText = ''; return; }
+      const prod = productos.find(p => p.id === parseInt(valSelect));
+      if (!prod || !prod.precio || prod.precio <= 0) { texto.innerText = ''; return; }
+
+      const { litros, subtotal } = calcularLitrosRedondeados(monto, prod.precio);
+      if (litros <= 0) { texto.innerText = `Con $${monto} no alcanza ni 1 litro de ${prod.nombre} (precio: $${prod.precio}/L).`; return; }
+
+      const diferencia = subtotal - monto;
+      if (diferencia > 0.009 && litros > 1) {
+        texto.innerText = `≈ ${litros} L = $${subtotal.toFixed(2)} (+$${diferencia.toFixed(2)} sobre los $${monto} — si no quiere pagar la diferencia, baja el monto para que dé ${litros - 1} L)`;
+      } else if (diferencia > 0.009) {
+        texto.innerText = `≈ ${litros} L = $${subtotal.toFixed(2)} (+$${diferencia.toFixed(2)} sobre los $${monto})`;
+      } else {
+        texto.innerText = `= ${litros} L = $${subtotal.toFixed(2)}`;
+      }
+    }
+
     function agregarPorDineroRedondeado() {
       const monto = Math.round(parseFloat(document.getElementById('monto-dinero').value)) || 0;
       const valSelect = document.getElementById('prod-dinero').value;
@@ -843,13 +880,16 @@
 
       const precioReal = prod.precio || 0;
       const gananciaReal = prod.ganancia || 0;
-      const litrosCalculados = precioReal > 0 ? (monto / precioReal) : 0;
-      const cobroFinal = monto;
-      const gananciaTotal = Math.ceil(gananciaReal * litrosCalculados);
 
-      agregarAlCarrito(prod.nombre, cobroFinal, gananciaTotal, `${litrosCalculados.toFixed(2)} L`, litrosCalculados, prod.id);
+      const { litros: litrosFinal, subtotal: subtotalFinal } = calcularLitrosRedondeados(monto, precioReal);
+      if (litrosFinal <= 0) return alert(`Con $${monto} no alcanza ni 1 litro de este producto.`);
+
+      const gananciaTotal = Math.ceil(gananciaReal * litrosFinal);
+
+      agregarAlCarrito(prod.nombre, subtotalFinal, gananciaTotal, `${litrosFinal} L`, litrosFinal, prod.id);
       document.getElementById('monto-dinero').value = '';
       document.getElementById('prod-dinero').value = '';
+      document.getElementById('txt-preview-dinero').innerText = '';
     }
 
     function agregarPorLitrosDirectos() {
